@@ -10,7 +10,7 @@ interface ResultsPageProps {
   onSignOut: () => void;
 }
 
-// Mock analysis generation based on input parameters - returns percentage data
+// Mock analysis generation based on input parameters - returns percentage data and summaries
 function generateAnalysis(data: DecisionData) {
   // Risk calculation factors
   const isHighRisk = data.priorConvictions.includes('VFO') || 
@@ -37,7 +37,7 @@ function generateAnalysis(data: DecisionData) {
   const convictionAdjustment = isViolentCharge ? 10 : -5;
   const incarcerationAdjustment = (isViolentCharge ? 20 : 0) + (hasPriorConvictions ? 15 : -10);
   
-  return {
+  const percentages = {
     releaseDecisions: {
       releasedOnRecognizance: Math.max(5, Math.min(95, baseReleaseRate + releaseAdjustment)),
       supervisedRelease: Math.max(5, Math.min(40, 25 + (isHighRisk ? 15 : -5))),
@@ -80,6 +80,25 @@ function generateAnalysis(data: DecisionData) {
       overTwoYears: Math.max(5, Math.min(35, 8 + incarcerationAdjustment))
     }
   };
+
+  // Generate text summaries
+  const summaries = {
+    releaseDecisions: `Based on similar cases, ${percentages.releaseDecisions.releasedOnRecognizance}% of defendants are typically released on their own recognizance, while ${percentages.releaseDecisions.detainedPretrial}% are detained pre-trial. Supervised release is granted in ${percentages.releaseDecisions.supervisedRelease}% of comparable cases.`,
+    
+    bailRanges: `In cases with similar characteristics, ${percentages.bailRanges.noBailSet}% have no bail set, while ${percentages.bailRanges.under5000}% receive bail under $5,000. Higher bail amounts of $5,000-$25,000 are set in ${percentages.bailRanges.between5000and25000}% of cases, with ${percentages.bailRanges.over25000}% receiving bail over $25,000.`,
+    
+    preTrialRearrest: `Historical data indicates that ${percentages.preTrialRearrest.noRearrest}% of defendants with similar profiles are not rearrested before trial. Pre-trial rearrest occurs in approximately ${percentages.preTrialRearrest.rearrested}% of comparable cases.`,
+    
+    disposedCaseOutcomes: `Similar cases result in dismissal ${percentages.disposedCaseOutcomes.dismissed}% of the time, while ${percentages.disposedCaseOutcomes.pleaBargain}% are resolved through plea bargaining. Trial convictions occur in ${percentages.disposedCaseOutcomes.trialConviction}% of cases that proceed to trial.`,
+    
+    convictionsChargeLevel: `Among convicted defendants with similar cases, ${percentages.convictionsChargeLevel.convictedAsChargedFelony}% are convicted as originally charged with a felony. ${percentages.convictionsChargeLevel.convictedLesserCharge}% receive convictions for lesser charges, while ${percentages.convictionsChargeLevel.acquitted}% are acquitted at trial.`,
+    
+    seriousSentences: `Sentencing patterns for comparable cases show ${percentages.seriousSentences.probationOnly}% receive probation-only sentences, avoiding incarceration. ${percentages.seriousSentences.shortTermIncarceration}% receive short-term incarceration, while ${percentages.seriousSentences.longTermIncarceration}% face long-term imprisonment.`,
+    
+    incarcerativeSentenceRanges: `Among defendants who receive incarceration, ${percentages.incarcerativeSentenceRanges.under6Months}% serve sentences under 6 months. ${percentages.incarcerativeSentenceRanges.sixMonthsToTwoYears}% receive sentences between 6 months and 2 years, while ${percentages.incarcerativeSentenceRanges.overTwoYears}% face sentences exceeding 2 years.`
+  };
+
+  return { percentages, summaries };
 }
 
 export function ResultsPage({ username, decisionData, onBack, onSignOut }: ResultsPageProps) {
@@ -88,58 +107,65 @@ export function ResultsPage({ username, decisionData, onBack, onSignOut }: Resul
   const analysisItems = [
     { 
       title: 'Release Decisions', 
+      summary: analysis.summaries.releaseDecisions,
       data: [
-        { label: 'Released on Recognizance', percentage: analysis.releaseDecisions.releasedOnRecognizance },
-        { label: 'Supervised Release', percentage: analysis.releaseDecisions.supervisedRelease },
-        { label: 'Detained Pre-trial', percentage: analysis.releaseDecisions.detainedPretrial }
+        { label: 'Released on Recognizance', percentage: analysis.percentages.releaseDecisions.releasedOnRecognizance },
+        { label: 'Supervised Release', percentage: analysis.percentages.releaseDecisions.supervisedRelease },
+        { label: 'Detained Pre-trial', percentage: analysis.percentages.releaseDecisions.detainedPretrial }
       ]
     },
     { 
       title: 'Bail Ranges', 
+      summary: analysis.summaries.bailRanges,
       data: [
-        { label: 'No Bail Set', percentage: analysis.bailRanges.noBailSet },
-        { label: 'Under $5,000', percentage: analysis.bailRanges.under5000 },
-        { label: '$5,000 - $25,000', percentage: analysis.bailRanges.between5000and25000 },
-        { label: 'Over $25,000', percentage: analysis.bailRanges.over25000 }
+        { label: 'No Bail Set', percentage: analysis.percentages.bailRanges.noBailSet },
+        { label: 'Under $5,000', percentage: analysis.percentages.bailRanges.under5000 },
+        { label: '$5,000 - $25,000', percentage: analysis.percentages.bailRanges.between5000and25000 },
+        { label: 'Over $25,000', percentage: analysis.percentages.bailRanges.over25000 }
       ]
     },
     { 
       title: 'Pre-Trial Rearrest', 
+      summary: analysis.summaries.preTrialRearrest,
       data: [
-        { label: 'No Rearrest', percentage: analysis.preTrialRearrest.noRearrest },
-        { label: 'Rearrested', percentage: analysis.preTrialRearrest.rearrested }
+        { label: 'No Rearrest', percentage: analysis.percentages.preTrialRearrest.noRearrest },
+        { label: 'Rearrested', percentage: analysis.percentages.preTrialRearrest.rearrested }
       ]
     },
     { 
       title: 'Disposed Case Outcomes', 
+      summary: analysis.summaries.disposedCaseOutcomes,
       data: [
-        { label: 'Case Dismissed', percentage: analysis.disposedCaseOutcomes.dismissed },
-        { label: 'Plea Bargain', percentage: analysis.disposedCaseOutcomes.pleaBargain },
-        { label: 'Trial Conviction', percentage: analysis.disposedCaseOutcomes.trialConviction }
+        { label: 'Case Dismissed', percentage: analysis.percentages.disposedCaseOutcomes.dismissed },
+        { label: 'Plea Bargain', percentage: analysis.percentages.disposedCaseOutcomes.pleaBargain },
+        { label: 'Trial Conviction', percentage: analysis.percentages.disposedCaseOutcomes.trialConviction }
       ]
     },
     { 
       title: 'Convictions-Charge Level', 
+      summary: analysis.summaries.convictionsChargeLevel,
       data: [
-        { label: 'Convicted as Charged (Felony)', percentage: analysis.convictionsChargeLevel.convictedAsChargedFelony },
-        { label: 'Convicted of Lesser Charge', percentage: analysis.convictionsChargeLevel.convictedLesserCharge },
-        { label: 'Acquitted', percentage: analysis.convictionsChargeLevel.acquitted }
+        { label: 'Convicted as Charged (Felony)', percentage: analysis.percentages.convictionsChargeLevel.convictedAsChargedFelony },
+        { label: 'Convicted of Lesser Charge', percentage: analysis.percentages.convictionsChargeLevel.convictedLesserCharge },
+        { label: 'Acquitted', percentage: analysis.percentages.convictionsChargeLevel.acquitted }
       ]
     },
     { 
       title: 'Most Serious Sentences', 
+      summary: analysis.summaries.seriousSentences,
       data: [
-        { label: 'Probation Only', percentage: analysis.seriousSentences.probationOnly },
-        { label: 'Short-term Incarceration', percentage: analysis.seriousSentences.shortTermIncarceration },
-        { label: 'Long-term Incarceration', percentage: analysis.seriousSentences.longTermIncarceration }
+        { label: 'Probation Only', percentage: analysis.percentages.seriousSentences.probationOnly },
+        { label: 'Short-term Incarceration', percentage: analysis.percentages.seriousSentences.shortTermIncarceration },
+        { label: 'Long-term Incarceration', percentage: analysis.percentages.seriousSentences.longTermIncarceration }
       ]
     },
     { 
       title: 'Incarcerative Sentence Ranges', 
+      summary: analysis.summaries.incarcerativeSentenceRanges,
       data: [
-        { label: 'Under 6 Months', percentage: analysis.incarcerativeSentenceRanges.under6Months },
-        { label: '6 Months - 2 Years', percentage: analysis.incarcerativeSentenceRanges.sixMonthsToTwoYears },
-        { label: 'Over 2 Years', percentage: analysis.incarcerativeSentenceRanges.overTwoYears }
+        { label: 'Under 6 Months', percentage: analysis.percentages.incarcerativeSentenceRanges.under6Months },
+        { label: '6 Months - 2 Years', percentage: analysis.percentages.incarcerativeSentenceRanges.sixMonthsToTwoYears },
+        { label: 'Over 2 Years', percentage: analysis.percentages.incarcerativeSentenceRanges.overTwoYears }
       ]
     }
   ];
@@ -198,30 +224,41 @@ export function ResultsPage({ username, decisionData, onBack, onSignOut }: Resul
         </Card>
 
         {/* Analysis Results */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           {analysisItems.map((item, index) => (
             <Card key={index} className="h-fit">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg sm:text-xl">{item.title}</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 sm:px-6">
-                <div className="space-y-3">
-                  {item.data.map((dataPoint, dataIndex) => (
-                    <div key={dataIndex} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                      <span className="text-sm sm:text-base text-foreground flex-1 pr-4">{dataPoint.label}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full transition-all duration-300" 
-                            style={{ width: `${dataPoint.percentage}%` }}
-                          />
+              <CardContent className="px-4 sm:px-6 space-y-4">
+                {/* Text Summary */}
+                <div className="p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
+                    {item.summary}
+                  </p>
+                </div>
+                
+                {/* Percentage Breakdown */}
+                <div className="space-y-2">
+                  <h4 className="text-sm uppercase tracking-wide text-muted-foreground">Statistical Breakdown</h4>
+                  <div className="space-y-2">
+                    {item.data.map((dataPoint, dataIndex) => (
+                      <div key={dataIndex} className="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-b-0">
+                        <span className="text-xs sm:text-sm text-foreground flex-1 pr-3">{dataPoint.label}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 sm:w-12 bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className="bg-primary h-1.5 rounded-full transition-all duration-300" 
+                              style={{ width: `${dataPoint.percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-xs sm:text-sm text-right min-w-[2.5rem]">
+                            {dataPoint.percentage}%
+                          </span>
                         </div>
-                        <span className="text-sm sm:text-base text-right min-w-[3rem]">
-                          {dataPoint.percentage}%
-                        </span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -230,7 +267,7 @@ export function ResultsPage({ username, decisionData, onBack, onSignOut }: Resul
 
         <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm sm:text-base text-yellow-800 leading-relaxed">
-            <strong>Disclaimer:</strong> These percentages are generated for demonstration purposes only and should not be used for actual legal decision-making. Real criminal justice decisions require comprehensive case review by qualified legal professionals and should consider additional factors not captured in this simplified statistical model.
+            <strong>Disclaimer:</strong> These statistical summaries and percentages are generated for demonstration purposes only and should not be used for actual legal decision-making. Real criminal justice decisions require comprehensive case review by qualified legal professionals and should consider additional factors not captured in this simplified statistical model.
           </p>
         </div>
       </div>

@@ -75,7 +75,7 @@ export function DecisionPage({ username, onSubmit, onSignOut }: DecisionPageProp
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl">Decision Analysis System</h1>
+            <h1 className="text-2xl sm:text-3xl">NYLP - Decision Tool</h1>
             <p className="text-muted-foreground text-base mt-1">Welcome, {username}</p>
           </div>
           <Button variant="outline" onClick={onSignOut} className="h-10 px-4 self-end sm:self-auto">
